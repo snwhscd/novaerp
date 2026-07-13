@@ -1,25 +1,45 @@
-import Link from 'next/link'
-import { Package } from 'lucide-react'
-
+import { brandsContainer } from '@/features/brands/infrastructure/container'
+import { categoriesContainer } from '@/features/categories/infrastructure/container'
+import { productsContainer } from '@/features/products/infrastructure/container'
+import { SummaryLinkCard } from '@/shared/presentation/components/dashboard/summary-link-card'
 import { Topbar } from '@/shared/presentation/components/layout/topbar'
+import { FolderTree, Package, Tag } from 'lucide-react'
 
-export default function DashboardHomePage() {
+export default async function DashboardHomePage() {
+  const [productsResult, brands, categories] = await Promise.all([
+    productsContainer.listProductsUseCase.execute({ page: 1, limit: 1 }),
+    brandsContainer.listBrandsUseCase.execute(),
+    categoriesContainer.listCategoriesUseCase.execute(),
+  ])
   return (
     <>
       <Topbar title="Resumen" />
       <main className="flex-1 overflow-y-auto p-6">
-        <Link
-          href="/products"
-          className="flex max-w-sm items-center gap-3 rounded-default border border-line bg-paper-raised p-4 transition-colors hover:border-accent"
-        >
-          <span className="flex h-10 w-10 items-center justify-center rounded-default bg-accent-soft text-accent">
-            <Package className="h-5 w-5" />
-          </span>
-          <span>
-            <span className="block text-sm font-medium text-ink">Productos</span>
-            <span className="block text-xs text-ink-muted">Gestiona tu catálogo</span>
-          </span>
-        </Link>
+        <div className="grid max-w 2xl grid-cols-1 gap-3 sm:grid-cols-2">
+          <SummaryLinkCard
+            href="/products"
+            icon={Package}
+            label="Productos"
+            description="Gestiona tu catálogo"
+            count={productsResult.total}
+          />
+
+          <SummaryLinkCard
+            href="/brands"
+            icon={Tag}
+            label="Marcas"
+            description="Marcas registradas"
+            count={brands.length}
+          />
+
+          <SummaryLinkCard
+            href="/categories"
+            icon={FolderTree}
+            label="Categorías"
+            description="Categorías registradas"
+            count={categories.length}
+          />
+        </div>
       </main>
     </>
   )

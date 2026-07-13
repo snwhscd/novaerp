@@ -1,5 +1,14 @@
+import {
+  Boxes,
+  FolderTree,
+  LayoutGrid,
+  Package,
+  Settings,
+  ShoppingCart,
+  Tag,
+  Users,
+} from 'lucide-react'
 import Link from 'next/link'
-import { Boxes, FolderTree, LayoutGrid, Package, Settings, ShoppingCart, Users } from 'lucide-react'
 
 import { SignOutButton } from '@/features/auth/presentation/components/sign-out-button'
 
@@ -12,6 +21,7 @@ const navSections = [
     label: 'Catálogo',
     items: [
       { href: '/products', label: 'Productos', icon: Package },
+      { href: '/brands', label: 'Marcas', icon: Tag },
       { href: '/categories', label: 'Categorías', icon: FolderTree },
       { href: '/inventory', label: 'Inventario', icon: Boxes, disabled: true },
     ],
