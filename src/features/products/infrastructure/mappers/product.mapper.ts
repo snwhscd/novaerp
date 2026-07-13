@@ -1,4 +1,4 @@
-import type { Product as PrismaProduct } from '@/generated/prisma'
+import type { Product as PrismaProduct } from '@/generated/prisma/client'
 
 import { Product } from '@/features/products/domain/entities/product'
 

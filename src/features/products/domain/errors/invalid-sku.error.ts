@@ -1,4 +1,4 @@
-import { DomainError } from '@/features/products/domain/errors/abstract-domain.error'
+import { DomainError } from '@/shared/domain/errors/domain-error'
 
 export class InvalidSkuError extends DomainError {
   constructor() {
