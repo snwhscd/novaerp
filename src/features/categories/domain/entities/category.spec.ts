@@ -48,4 +48,64 @@ describe('Category', () => {
 
     expect(category.deletedAt).toBe(firstDeletedAt)
   })
+
+  describe('eventos de dominio', () => {
+    it('create() emite CategoryCreatedEvent', () => {
+      const category = Category.create(buildValidProps())
+
+      const events = category.pullDomainEvents()
+
+      expect(events).toHaveLength(1)
+      expect(events[0].eventName).toBe('category.created')
+      expect(events[0].entityId).toBe('cat_1')
+      expect(events[0].newValues).toEqual({ name: 'Electrónica', description: null })
+      expect(events[0].previousValues).toBeNull()
+    })
+
+    it('reconstitute() NO emite eventos', () => {
+      const category = Category.reconstitute({
+        ...buildValidProps(),
+        deletedAt: undefined,
+      })
+
+      expect(category.pullDomainEvents()).toHaveLength(0)
+    })
+
+    it('pullDomainEvents() limpia la lista tras leerla', () => {
+      const category = Category.create(buildValidProps())
+
+      category.pullDomainEvents()
+      const secondRead = category.pullDomainEvents()
+
+      expect(secondRead).toHaveLength(0)
+    })
+
+    it('rename() emite CategoryRenamedEvent con el nombre anterior y el nuevo', () => {
+      const category = Category.create(buildValidProps())
+      category.pullDomainEvents() // descarta el evento de create()
+
+      category.rename('Cómputo')
+      const events = category.pullDomainEvents()
+
+      expect(events).toHaveLength(1)
+      expect(events[0].eventName).toBe('category.renamed')
+      expect(events[0].previousValues).toEqual({ name: 'Electrónica' })
+      expect(events[0].newValues).toEqual({ name: 'Cómputo' })
+    })
+
+    it('delete() emite CategoryDeletedEvent solo la primera vez', () => {
+      const category = Category.create(buildValidProps())
+      category.pullDomainEvents()
+
+      category.delete()
+      const firstDeleteEvents = category.pullDomainEvents()
+
+      category.delete() // segunda llamada: no debe emitir nada más
+      const secondDeleteEvents = category.pullDomainEvents()
+
+      expect(firstDeleteEvents).toHaveLength(1)
+      expect(firstDeleteEvents[0].eventName).toBe('category.deleted')
+      expect(secondDeleteEvents).toHaveLength(0)
+    })
+  })
 })

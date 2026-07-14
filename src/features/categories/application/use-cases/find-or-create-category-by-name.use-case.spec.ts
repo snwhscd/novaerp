@@ -4,6 +4,7 @@ import { Category, CategoryId } from '@/features/categories/domain/entities/cate
 import { DuplicateCategoryNameError } from '@/features/categories/domain/errors/duplicate-category-name.error'
 import { CategoryRepository } from '@/features/categories/domain/repositories/category.repository'
 import { FindOrCreateCategoryByNameUseCase } from '@/features/categories/application/use-cases/find-or-create-category-by-name.use-case'
+import { DomainEventDispatcher } from '@/shared/application/events/domain-event-dispatcher'
 
 class InMemoryCategoryRepository implements CategoryRepository {
   private categories = new Map<string, Category>()
@@ -48,7 +49,11 @@ describe('FindOrCreateCategoryByNameUseCase', () => {
 
   beforeEach(() => {
     repository = new InMemoryCategoryRepository()
-    useCase = new FindOrCreateCategoryByNameUseCase(repository, new FakeIdGenerator())
+    useCase = new FindOrCreateCategoryByNameUseCase(
+      repository,
+      new FakeIdGenerator(),
+      new DomainEventDispatcher(),
+    )
   })
 
   it('crea una categoría nueva si no existe', async () => {
@@ -90,5 +95,43 @@ describe('FindOrCreateCategoryByNameUseCase', () => {
     const error = new DuplicateCategoryNameError('Hogar')
 
     expect(error.message).toContain('Hogar')
+  })
+
+  it('despacha CategoryCreatedEvent al dispatcher cuando crea una categoría nueva', async () => {
+    const dispatcher = new DomainEventDispatcher()
+    const received: string[] = []
+
+    dispatcher.subscribe((event) => {
+      received.push(event.eventName)
+    })
+
+    const useCaseWithSpy = new FindOrCreateCategoryByNameUseCase(
+      repository,
+      new FakeIdGenerator(),
+      dispatcher,
+    )
+
+    await useCaseWithSpy.execute({ name: 'Jardinería' })
+
+    expect(received).toEqual(['category.created'])
+  })
+
+  it('NO despacha nada si reutiliza una categoría existente', async () => {
+    const dispatcher = new DomainEventDispatcher()
+    const received: string[] = []
+    dispatcher.subscribe((event) => received.push(event.eventName))
+
+    const useCaseWithSpy = new FindOrCreateCategoryByNameUseCase(
+      repository,
+      new FakeIdGenerator(),
+      dispatcher,
+    )
+
+    await useCaseWithSpy.execute({ name: 'Deportes' })
+    received.length = 0 // limpiamos lo del primer create
+
+    await useCaseWithSpy.execute({ name: 'Deportes' }) // ya existe
+
+    expect(received).toEqual([])
   })
 })
