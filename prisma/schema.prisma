@@ -8,26 +8,24 @@ datasource db {
 }
 
 // ── Autenticación (Better Auth) ────────────────────────────────────────────
-// Estos 4 modelos siguen el schema que Better Auth espera. Sus IDs usan
+// Estos modelos siguen el schema que Better Auth espera. Sus IDs usan
 // cuid() en vez de nuestro UlidIdGenerator: Better Auth administra estas
 // tablas directamente a través de su adapter de Prisma, sin pasar por
 // nuestros repositorios ni casos de uso -- no son un agregado de nuestro
 // dominio, son infraestructura de un tercero.
-enum UserRole {
-  ADMIN
-  STAFF
-}
-
 model User {
-  id            String    @id @default(cuid())
+  id            String  @id @default(cuid())
   name          String
-  email         String    @unique
-  emailVerified Boolean   @default(false)
+  email         String  @unique
+  emailVerified Boolean @default(false)
   image         String?
-  role          UserRole  @default(STAFF)
 
   sessions Session[]
   accounts Account[]
+  members  Member[]
+  // El rol NO vive aquí -- vive en Member, porque en un sistema
+  // multi-tenant el mismo usuario puede tener un rol distinto en cada
+  // organización (ADMIN en la Empresa A, sin acceso en la Empresa B).
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -41,6 +39,11 @@ model Session {
   expiresAt DateTime
   ipAddress String?
   userAgent String?
+
+  // A qué organización "está parado" el usuario en esta sesión -- todas
+  // las queries de negocio se filtran por esta, no por "todas las
+  // organizaciones a las que pertenece".
+  activeOrganizationId String?
 
   userId String
   user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -83,6 +86,55 @@ model Verification {
   updatedAt DateTime @updatedAt
 
   @@map("verification")
+}
+
+// ── Multi-tenancy (plugin organization) ────────────────────────────────────
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  logo      String?
+  metadata  String?
+  createdAt DateTime @default(now())
+
+  members     Member[]
+  invitations Invitation[]
+
+  @@map("organization")
+}
+
+model Member {
+  id   String @id @default(cuid())
+  role String @default("member")
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([userId])
+  @@map("member")
+}
+
+model Invitation {
+  id        String   @id @default(cuid())
+  email     String
+  role      String?
+  status    String   @default("pending")
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  inviterId String
+
+  @@index([organizationId])
+  @@map("invitation")
 }
 
 enum ProductType {

@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import {
   Boxes,
   FolderTree,
@@ -8,9 +9,12 @@ import {
   Tag,
   Users,
 } from 'lucide-react'
-import Link from 'next/link'
 
 import { SignOutButton } from '@/features/auth/presentation/components/sign-out-button'
+import {
+  OrganizationSwitcher,
+  type OrganizationOption,
+} from '@/features/organizations/presentation/components/organization-switcher'
 
 const navSections = [
   {
@@ -40,7 +44,13 @@ export interface SidebarUser {
   email: string
 }
 
-export function Sidebar({ user }: { user: SidebarUser }) {
+export interface SidebarProps {
+  user: SidebarUser
+  organizations: OrganizationOption[]
+  activeOrganizationId: string
+}
+
+export function Sidebar({ user, organizations, activeOrganizationId }: SidebarProps) {
   const initials = user.name
     .split(' ')
     .map((part) => part[0])
@@ -55,6 +65,11 @@ export function Sidebar({ user }: { user: SidebarUser }) {
           NOVA<span className="text-accent">ERP</span>
         </span>
       </div>
+
+      <OrganizationSwitcher
+        organizations={organizations}
+        activeOrganizationId={activeOrganizationId}
+      />
 
       <nav className="flex-1 space-y-6 overflow-y-auto px-3 py-5">
         {navSections.map((section) => (

@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import { FindOrCreateCategoryByNameUseCase } from '@/features/categories/application/use-cases/find-or-create-category-by-name.use-case'
 import { Category, CategoryId } from '@/features/categories/domain/entities/category'
 import { DuplicateCategoryNameError } from '@/features/categories/domain/errors/duplicate-category-name.error'
 import { CategoryRepository } from '@/features/categories/domain/repositories/category.repository'
-import { FindOrCreateCategoryByNameUseCase } from '@/features/categories/application/use-cases/find-or-create-category-by-name.use-case'
 import { DomainEventDispatcher } from '@/shared/application/events/domain-event-dispatcher'
 
 class InMemoryCategoryRepository implements CategoryRepository {
@@ -119,7 +119,9 @@ describe('FindOrCreateCategoryByNameUseCase', () => {
   it('NO despacha nada si reutiliza una categoría existente', async () => {
     const dispatcher = new DomainEventDispatcher()
     const received: string[] = []
-    dispatcher.subscribe((event) => received.push(event.eventName))
+    dispatcher.subscribe((event) => {
+      received.push(event.eventName)
+    })
 
     const useCaseWithSpy = new FindOrCreateCategoryByNameUseCase(
       repository,
