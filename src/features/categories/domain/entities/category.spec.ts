@@ -6,6 +6,7 @@ import { InvalidCategoryNameError } from '@/features/categories/domain/errors/in
 function buildValidProps(overrides: Partial<Parameters<typeof Category.create>[0]> = {}) {
   return {
     id: 'cat_1',
+    organizationId: 'org_1',
     name: 'Electrónica',
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -19,6 +20,12 @@ describe('Category', () => {
 
     expect(category.id).toBe('cat_1')
     expect(category.name).toBe('Electrónica')
+  })
+
+  it('expone la organización a la que pertenece', () => {
+    const category = Category.create(buildValidProps({ organizationId: 'org_42' }))
+
+    expect(category.organizationId).toBe('org_42')
   })
 
   it('rechaza nombre vacío', () => {

@@ -7,9 +7,18 @@ import { CategoryMapper } from '@/features/categories/infrastructure/mappers/cat
 import { isPrismaKnownError, PRISMA_ERROR_CODE } from '@/shared/infrastructure/prisma/prisma-error'
 
 export class PrismaCategoryRepository implements CategoryRepository {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(
+    private readonly prisma: PrismaClient,
+    private readonly organizationId: string,
+  ) {}
 
   async save(category: Category): Promise<void> {
+    // Defensa extra: si alguien construyera la entidad con un
+    // organizationId distinto al de este repositorio (bug de otra capa,
+    // no debería pasar nunca), preferimos tronar aquí y no guardar datos
+    // cruzados entre empresas.
+    this.assertSameOrganization(category)
+
     const data = CategoryMapper.toPersistence(category)
 
     try {
@@ -20,10 +29,15 @@ export class PrismaCategoryRepository implements CategoryRepository {
   }
 
   async update(category: Category): Promise<void> {
+    this.assertSameOrganization(category)
+
     const { id, ...data } = CategoryMapper.toPersistence(category)
 
     try {
-      await this.prisma.category.update({ where: { id }, data })
+      await this.prisma.category.update({
+        where: { id, organizationId: this.organizationId },
+        data,
+      })
     } catch (error) {
       throw this.translateError(error, category.name)
     }
@@ -31,14 +45,14 @@ export class PrismaCategoryRepository implements CategoryRepository {
 
   async delete(id: CategoryId): Promise<void> {
     await this.prisma.category.update({
-      where: { id },
+      where: { id, organizationId: this.organizationId },
       data: { deletedAt: new Date() },
     })
   }
 
   async findById(id: CategoryId): Promise<Category | null> {
     const record = await this.prisma.category.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, organizationId: this.organizationId, deletedAt: null },
     })
 
     return record ? CategoryMapper.toDomain(record) : null
@@ -46,7 +60,7 @@ export class PrismaCategoryRepository implements CategoryRepository {
 
   async findByName(name: string): Promise<Category | null> {
     const record = await this.prisma.category.findFirst({
-      where: { name, deletedAt: null },
+      where: { name, organizationId: this.organizationId, deletedAt: null },
     })
 
     return record ? CategoryMapper.toDomain(record) : null
@@ -54,11 +68,19 @@ export class PrismaCategoryRepository implements CategoryRepository {
 
   async findAll(): Promise<Category[]> {
     const records = await this.prisma.category.findMany({
-      where: { deletedAt: null },
+      where: { organizationId: this.organizationId, deletedAt: null },
       orderBy: { name: 'asc' },
     })
 
     return records.map(CategoryMapper.toDomain)
+  }
+
+  private assertSameOrganization(category: Category): void {
+    if (category.organizationId !== this.organizationId) {
+      throw new Error(
+        `PrismaCategoryRepository scoped to ${this.organizationId} received a Category from ${category.organizationId}`,
+      )
+    }
   }
 
   private translateError(error: unknown, categoryName: string): unknown {

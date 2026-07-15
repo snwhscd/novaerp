@@ -10,6 +10,7 @@ export class CreateProductUseCase {
     private readonly repository: ProductRepository,
     private readonly idGenerator: IdGenerator,
     private readonly skuGenerator: SkuGenerator,
+    private readonly organizationId: string,
   ) {}
 
   async execute(dto: CreateProductDto): Promise<{ id: string }> {
@@ -26,6 +27,7 @@ export class CreateProductUseCase {
 
     const product = Product.create({
       id: this.idGenerator.generateId(),
+      organizationId: this.organizationId,
 
       sku,
       barcode: dto.barcode,

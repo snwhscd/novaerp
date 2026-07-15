@@ -6,6 +6,7 @@ import { InvalidBrandNameError } from '@/features/brands/domain/errors/invalid-b
 function buildValidProps(overrides: Partial<Parameters<typeof Brand.create>[0]> = {}) {
   return {
     id: 'brand_1',
+    organizationId: 'org_1',
     name: 'Samsung',
     createdAt: new Date(),
     updatedAt: new Date(),
@@ -19,6 +20,12 @@ describe('Brand', () => {
 
     expect(brand.id).toBe('brand_1')
     expect(brand.name).toBe('Samsung')
+  })
+
+  it('expone la organización a la que pertenece', () => {
+    const brand = Brand.create(buildValidProps({ organizationId: 'org_42' }))
+
+    expect(brand.organizationId).toBe('org_42')
   })
 
   it('rechaza nombre vacío', () => {

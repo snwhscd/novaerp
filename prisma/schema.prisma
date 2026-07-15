@@ -99,6 +99,11 @@ model Organization {
 
   members     Member[]
   invitations Invitation[]
+  categories  Category[]
+  brands      Brand[]
+  products    Product[]
+  stocks      Stock[]
+  inventoryMovements InventoryMovement[]
 
   @@map("organization")
 }
@@ -144,38 +149,51 @@ enum ProductType {
 }
 
 model Brand {
-  id          String  @id
-  name        String  @unique
-  description String?
+  id             String  @id
+  organizationId String
+  name           String
+  description    String?
 
-  products Product[]
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  products     Product[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
+  // Mismo criterio que Category: el nombre se repite entre empresas, no
+  // dentro de la misma.
+  @@unique([organizationId, name])
+  @@index([organizationId])
   @@index([deletedAt])
 }
 
 model Category {
-  id          String  @id
-  name        String  @unique
-  description String?
+  id             String  @id
+  organizationId String
+  name           String
+  description    String?
 
-  products Product[]
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  products     Product[]
 
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
+  // "Electrónica" puede existir en dos empresas distintas -- lo que no
+  // puede repetirse es el nombre DENTRO de la misma empresa.
+  @@unique([organizationId, name])
+  @@index([organizationId])
   @@index([deletedAt])
 }
 
 model Product {
-  id String @id
+  id             String @id
+  organizationId String
 
-  sku     String  @unique
-  barcode String? @unique
+  sku     String
+  barcode String?
 
   name        String
   description String?
@@ -187,20 +205,83 @@ model Product {
 
   trackInventory Boolean @default(true)
 
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   brandId String?
   brand   Brand?  @relation(fields: [brandId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
   categoryId String
   category   Category @relation(fields: [categoryId], references: [id], onDelete: Restrict, onUpdate: Cascade)
 
+  stock              Stock?
+  inventoryMovements InventoryMovement[]
+
   createdAt DateTime  @default(now())
   updatedAt DateTime  @updatedAt
   deletedAt DateTime?
 
+  // Mismo SKU puede repetirse entre empresas distintas, no dentro de la
+  // misma. Igual para barcode (Postgres no cuenta NULL contra un unique
+  // compuesto, así que varios productos sin barcode en la misma empresa
+  // siguen siendo válidos).
+  @@unique([organizationId, sku])
+  @@unique([organizationId, barcode])
+  @@index([organizationId])
   @@index([name])
   @@index([productType])
   @@index([brandId])
   @@index([categoryId])
   @@index([createdAt])
   @@index([deletedAt])
+}
+
+// ── Inventario ──────────────────────────────────────────────────────────
+// Stock = cantidad ACTUAL de un producto (una fila por producto).
+// InventoryMovement = historial INMUTABLE de cada cambio (el kardex).
+// No son lo mismo que los domain events: los events alimentan auditoría
+// (técnico), InventoryMovement es un dato de negocio que el usuario
+// consulta directamente ("historial de este producto").
+model Stock {
+  id             String @id
+  organizationId String
+  productId      String @unique
+
+  quantity Int @default(0)
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product      Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([organizationId])
+}
+
+enum InventoryMovementReason {
+  INITIAL // primera vez que se registra stock para un producto
+  MANUAL_ADJUSTMENT // conteo físico, corrección manual
+  SALE // (futuro) descontado por una venta
+  PURCHASE // (futuro) agregado por una compra
+  RETURN // (futuro) devolución de cliente o a proveedor
+}
+
+model InventoryMovement {
+  id             String @id
+  organizationId String
+  productId      String
+
+  // Con signo: positivo = entrada, negativo = salida. Un solo campo en
+  // vez de (type + quantity) separados -- el signo YA dice si fue
+  // entrada o salida, no hace falta duplicarlo en otro campo.
+  quantityDelta Int
+  reason        InventoryMovementReason
+  note          String?
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  product      Product      @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  createdAt DateTime @default(now())
+
+  @@index([organizationId])
+  @@index([productId])
 }

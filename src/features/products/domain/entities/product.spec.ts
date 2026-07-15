@@ -10,6 +10,7 @@ import { Product } from '@/features/products/domain/entities/product'
 function buildValidProps(overrides: Partial<Parameters<typeof Product.create>[0]> = {}) {
   return {
     id: 'prod_1',
+    organizationId: 'org_1',
     sku: 'SKU-001',
     name: 'Producto de prueba',
     productType: ProductType.PHYSICAL,
@@ -30,6 +31,12 @@ describe('Product', () => {
     expect(product.id).toBe('prod_1')
     expect(product.name).toBe('Producto de prueba')
     expect(product.deletedAt).toBeUndefined()
+  })
+
+  it('expone la organización a la que pertenece', () => {
+    const product = Product.create(buildValidProps({ organizationId: 'org_42' }))
+
+    expect(product.organizationId).toBe('org_42')
   })
 
   it('rechaza nombre vacío', () => {

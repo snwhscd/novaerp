@@ -19,15 +19,15 @@ import {
 const navSections = [
   {
     label: 'General',
-    items: [{ href: '/', label: 'Resumen', icon: LayoutGrid }],
+    items: [{ href: '/', label: 'Resumen', icon: LayoutGrid, disabled: false }],
   },
   {
     label: 'Catálogo',
     items: [
-      { href: '/products', label: 'Productos', icon: Package },
-      { href: '/brands', label: 'Marcas', icon: Tag },
-      { href: '/categories', label: 'Categorías', icon: FolderTree },
-      { href: '/inventory', label: 'Inventario', icon: Boxes, disabled: true },
+      { href: '/products', label: 'Productos', icon: Package, disabled: false },
+      { href: '/brands', label: 'Marcas', icon: Tag, disabled: false },
+      { href: '/categories', label: 'Categorías', icon: FolderTree, disabled: false },
+      { href: '/inventory', label: 'Inventario', icon: Boxes, disabled: false },
     ],
   },
   {

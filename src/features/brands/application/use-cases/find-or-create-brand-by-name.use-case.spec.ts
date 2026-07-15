@@ -57,13 +57,19 @@ class FakeIdGenerator {
   }
 }
 
+const TEST_ORGANIZATION_ID = 'org_test'
+
 describe('FindOrCreateBrandByNameUseCase', () => {
   let repository: InMemoryBrandRepository
   let useCase: FindOrCreateBrandByNameUseCase
 
   beforeEach(() => {
     repository = new InMemoryBrandRepository()
-    useCase = new FindOrCreateBrandByNameUseCase(repository, new FakeIdGenerator())
+    useCase = new FindOrCreateBrandByNameUseCase(
+      repository,
+      new FakeIdGenerator(),
+      TEST_ORGANIZATION_ID,
+    )
   })
 
   it('crea una marca nueva si no existe', async () => {
@@ -73,6 +79,14 @@ describe('FindOrCreateBrandByNameUseCase', () => {
 
     expect(saved).not.toBeNull()
     expect(saved?.id).toBe(result.id)
+  })
+
+  it('asigna la organización inyectada a la marca creada', async () => {
+    const result = await useCase.execute({ name: 'Panasonic' })
+
+    const saved = await repository.findById(result.id)
+
+    expect(saved?.organizationId).toBe(TEST_ORGANIZATION_ID)
   })
 
   it('reutiliza la marca existente en vez de duplicarla', async () => {
@@ -101,6 +115,7 @@ describe('FindOrCreateBrandByNameUseCase', () => {
 
     const winnerBrand = Brand.create({
       id: 'race_winner',
+      organizationId: TEST_ORGANIZATION_ID,
       name: 'Xiaomi',
       createdAt: new Date(),
       updatedAt: new Date(),

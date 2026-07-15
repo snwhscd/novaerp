@@ -16,11 +16,13 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect('/sign-in')
   }
 
-  // Sin organización activa no hay "empresa" bajo la cual trabajar --
-  // todavía no existe ningún dato scoped a organización (eso viene
-  // después), pero ya forzamos el flujo correcto desde ahora.
+  // Sin organización activa no hay "empresa" bajo la cual trabajar.
+  // OJO: esto NO significa que el usuario no tenga ninguna empresa --
+  // Better Auth deja activeOrganizationId en null en cada sesión nueva,
+  // incluso si ya pertenece a una. /organizations/select distingue esos
+  // dos casos (tiene empresas pero ninguna activa vs. de verdad cero).
   if (!session.session.activeOrganizationId) {
-    redirect('/organizations/new')
+    redirect('/organizations/select')
   }
 
   const organizations = await auth.api.listOrganizations({ headers: requestHeaders })

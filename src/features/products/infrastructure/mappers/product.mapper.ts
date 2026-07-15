@@ -6,6 +6,7 @@ export class ProductMapper {
   static toDomain(prismaProduct: PrismaProduct): Product {
     return Product.reconstitute({
       id: prismaProduct.id,
+      organizationId: prismaProduct.organizationId,
 
       sku: prismaProduct.sku,
       barcode: prismaProduct.barcode ?? undefined,
@@ -32,6 +33,7 @@ export class ProductMapper {
   static toPersistence(product: Product) {
     return {
       id: product.id,
+      organizationId: product.organizationId,
 
       sku: product.sku,
       barcode: product.barcode ?? null,

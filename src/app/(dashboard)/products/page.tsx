@@ -1,6 +1,7 @@
 import { PackagePlus, PackageSearch } from 'lucide-react'
 
-import { productsContainer } from '@/features/products/infrastructure/container'
+import { createProductsContainer } from '@/features/products/infrastructure/container'
+import { getRequestContext } from '@/shared/infrastructure/auth/get-request-context'
 import { Badge } from '@/shared/presentation/components/ui/badge'
 import { LinkButton } from '@/shared/presentation/components/ui/link-button'
 import { Topbar } from '@/shared/presentation/components/layout/topbar'
@@ -23,6 +24,9 @@ export default async function ProductsPage({
 }) {
   const params = await searchParams
   const page = Number(params.page ?? '1') || 1
+
+  const context = await getRequestContext()
+  const productsContainer = createProductsContainer(context)
 
   const { items, total, limit } = await productsContainer.listProductsUseCase.execute({ page })
 

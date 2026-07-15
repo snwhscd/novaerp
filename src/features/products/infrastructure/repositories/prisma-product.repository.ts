@@ -9,30 +9,40 @@ import {
 import { ProductMapper } from '@/features/products/infrastructure/mappers/product.mapper'
 
 export class PrismaProductRepository implements ProductRepository {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(
+    private readonly prisma: PrismaClient,
+    private readonly organizationId: string,
+  ) {}
 
   async save(product: Product): Promise<void> {
+    this.assertSameOrganization(product)
+
     const data = ProductMapper.toPersistence(product)
 
     await this.prisma.product.create({ data })
   }
 
   async update(product: Product): Promise<void> {
+    this.assertSameOrganization(product)
+
     const { id, ...data } = ProductMapper.toPersistence(product)
 
-    await this.prisma.product.update({ where: { id }, data })
+    await this.prisma.product.update({
+      where: { id, organizationId: this.organizationId },
+      data,
+    })
   }
 
   async delete(id: ProductId): Promise<void> {
     await this.prisma.product.update({
-      where: { id },
+      where: { id, organizationId: this.organizationId },
       data: { deletedAt: new Date() },
     })
   }
 
   async findById(id: ProductId): Promise<Product | null> {
     const record = await this.prisma.product.findFirst({
-      where: { id, deletedAt: null },
+      where: { id, organizationId: this.organizationId, deletedAt: null },
     })
 
     return record ? ProductMapper.toDomain(record) : null
@@ -40,7 +50,7 @@ export class PrismaProductRepository implements ProductRepository {
 
   async findBySku(sku: string): Promise<Product | null> {
     const record = await this.prisma.product.findFirst({
-      where: { sku, deletedAt: null },
+      where: { sku, organizationId: this.organizationId, deletedAt: null },
     })
 
     return record ? ProductMapper.toDomain(record) : null
@@ -50,6 +60,7 @@ export class PrismaProductRepository implements ProductRepository {
     const { page, limit, search, categoryId, brandId } = criteria
 
     const where = {
+      organizationId: this.organizationId,
       deletedAt: null,
       ...(categoryId ? { categoryId } : {}),
       ...(brandId ? { brandId } : {}),
@@ -83,10 +94,18 @@ export class PrismaProductRepository implements ProductRepository {
 
   async findAll(): Promise<Product[]> {
     const records = await this.prisma.product.findMany({
-      where: { deletedAt: null },
+      where: { organizationId: this.organizationId, deletedAt: null },
       orderBy: { createdAt: 'desc' },
     })
 
     return records.map(ProductMapper.toDomain)
+  }
+
+  private assertSameOrganization(product: Product): void {
+    if (product.organizationId !== this.organizationId) {
+      throw new Error(
+        `PrismaProductRepository scoped to ${this.organizationId} received a Product from ${product.organizationId}`,
+      )
+    }
   }
 }

@@ -1,9 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import { FindOrCreateCategoryByNameUseCase } from '@/features/categories/application/use-cases/find-or-create-category-by-name.use-case'
 import { Category, CategoryId } from '@/features/categories/domain/entities/category'
 import { DuplicateCategoryNameError } from '@/features/categories/domain/errors/duplicate-category-name.error'
 import { CategoryRepository } from '@/features/categories/domain/repositories/category.repository'
+import { FindOrCreateCategoryByNameUseCase } from '@/features/categories/application/use-cases/find-or-create-category-by-name.use-case'
 import { DomainEventDispatcher } from '@/shared/application/events/domain-event-dispatcher'
 
 class InMemoryCategoryRepository implements CategoryRepository {
@@ -43,6 +43,8 @@ class FakeIdGenerator {
   }
 }
 
+const TEST_ORGANIZATION_ID = 'org_test'
+
 describe('FindOrCreateCategoryByNameUseCase', () => {
   let repository: InMemoryCategoryRepository
   let useCase: FindOrCreateCategoryByNameUseCase
@@ -53,6 +55,7 @@ describe('FindOrCreateCategoryByNameUseCase', () => {
       repository,
       new FakeIdGenerator(),
       new DomainEventDispatcher(),
+      TEST_ORGANIZATION_ID,
     )
   })
 
@@ -63,6 +66,14 @@ describe('FindOrCreateCategoryByNameUseCase', () => {
 
     expect(saved).not.toBeNull()
     expect(saved?.id).toBe(result.id)
+  })
+
+  it('asigna la organización inyectada a la categoría creada', async () => {
+    const result = await useCase.execute({ name: 'Muebles' })
+
+    const saved = await repository.findById(result.id)
+
+    expect(saved?.organizationId).toBe(TEST_ORGANIZATION_ID)
   })
 
   it('reutiliza la categoría existente en vez de duplicarla', async () => {
@@ -109,6 +120,7 @@ describe('FindOrCreateCategoryByNameUseCase', () => {
       repository,
       new FakeIdGenerator(),
       dispatcher,
+      TEST_ORGANIZATION_ID,
     )
 
     await useCaseWithSpy.execute({ name: 'Jardinería' })
@@ -127,6 +139,7 @@ describe('FindOrCreateCategoryByNameUseCase', () => {
       repository,
       new FakeIdGenerator(),
       dispatcher,
+      TEST_ORGANIZATION_ID,
     )
 
     await useCaseWithSpy.execute({ name: 'Deportes' })

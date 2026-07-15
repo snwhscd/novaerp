@@ -2,8 +2,9 @@
 
 import { revalidatePath } from 'next/cache'
 
-import { categoriesContainer } from '@/features/categories/infrastructure/container'
+import { createCategoriesContainer } from '@/features/categories/infrastructure/container'
 import { createCategorySchema } from '@/features/categories/presentation/schemas/create-category.schema'
+import { getRequestContext } from '@/shared/infrastructure/auth/get-request-context'
 import { DomainError } from '@/shared/domain/errors/domain-error'
 
 export interface CreateCategoryActionState {
@@ -31,6 +32,9 @@ export async function createCategoryAction(
   }
 
   try {
+    const context = await getRequestContext()
+    const categoriesContainer = createCategoriesContainer(context)
+
     const result = await categoriesContainer.createCategoryUseCase.execute({
       name: parsed.data.name,
       description: parsed.data.description || undefined,

@@ -1,10 +1,14 @@
 import { Tag, TagsIcon } from 'lucide-react'
 
-import { brandsContainer } from '@/features/brands/infrastructure/container'
-import { Topbar } from '@/shared/presentation/components/layout/topbar'
+import { createBrandsContainer } from '@/features/brands/infrastructure/container'
+import { getRequestContext } from '@/shared/infrastructure/auth/get-request-context'
 import { LinkButton } from '@/shared/presentation/components/ui/link-button'
+import { Topbar } from '@/shared/presentation/components/layout/topbar'
 
 export default async function BrandsPage() {
+  const context = await getRequestContext()
+  const brandsContainer = createBrandsContainer(context)
+
   const brands = await brandsContainer.listBrandsUseCase.execute()
 
   return (

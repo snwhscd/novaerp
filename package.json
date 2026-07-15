@@ -10,7 +10,13 @@
     "prepare": "husky",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "test:watch": "vitest"
+    "test:watch": "vitest",
+    "prisma:generate": "prisma generate",
+    "prisma:migrate:deploy": "prisma migrate deploy",
+    "prisma:studio": "prisma studio",
+    "prisma:validate": "prisma validate",
+    "prisma:format": "prisma format",
+    "postinstall": "prisma generate"
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx}": [

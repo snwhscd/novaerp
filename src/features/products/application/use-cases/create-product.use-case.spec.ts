@@ -58,13 +58,20 @@ class FakeSkuGenerator {
   }
 }
 
+const TEST_ORGANIZATION_ID = 'org_test'
+
 describe('CreateProductUseCase', () => {
   let repository: InMemoryProductRepository
   let useCase: CreateProductUseCase
 
   beforeEach(() => {
     repository = new InMemoryProductRepository()
-    useCase = new CreateProductUseCase(repository, new FakeIdGenerator(), new FakeSkuGenerator())
+    useCase = new CreateProductUseCase(
+      repository,
+      new FakeIdGenerator(),
+      new FakeSkuGenerator(),
+      TEST_ORGANIZATION_ID,
+    )
   })
 
   it('crea un producto con SKU provisto', async () => {
@@ -81,6 +88,21 @@ describe('CreateProductUseCase', () => {
 
     expect(saved).not.toBeNull()
     expect(saved?.sku).toBe('SKU-100')
+  })
+
+  it('asigna la organización inyectada al producto creado', async () => {
+    const result = await useCase.execute({
+      sku: 'SKU-200',
+      name: 'Escritorio',
+      productType: ProductType.PHYSICAL,
+      costPrice: 80,
+      salePrice: 150,
+      categoryId: 'cat_1',
+    })
+
+    const saved = await repository.findById(result.id)
+
+    expect(saved?.organizationId).toBe(TEST_ORGANIZATION_ID)
   })
 
   it('genera un SKU automáticamente si no se provee', async () => {

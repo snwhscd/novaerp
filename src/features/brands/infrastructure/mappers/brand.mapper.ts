@@ -6,6 +6,7 @@ export class BrandMapper {
   static toDomain(prismaBrand: PrismaBrand): Brand {
     return Brand.reconstitute({
       id: prismaBrand.id,
+      organizationId: prismaBrand.organizationId,
       name: prismaBrand.name,
       description: prismaBrand.description ?? undefined,
       createdAt: prismaBrand.createdAt,
@@ -17,6 +18,7 @@ export class BrandMapper {
   static toPersistence(brand: Brand) {
     return {
       id: brand.id,
+      organizationId: brand.organizationId,
       name: brand.name,
       description: brand.description ?? null,
       createdAt: brand.createdAt,

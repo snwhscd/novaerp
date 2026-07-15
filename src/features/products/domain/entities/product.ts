@@ -8,6 +8,7 @@ export type ProductId = string
 
 export interface CreateProductProps {
   id: ProductId
+  organizationId: string
 
   sku: string
   barcode?: string
@@ -82,6 +83,10 @@ export class Product {
 
   get id() {
     return this.props.id
+  }
+
+  get organizationId() {
+    return this.props.organizationId
   }
 
   get sku() {

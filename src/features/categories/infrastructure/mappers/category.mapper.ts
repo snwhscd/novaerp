@@ -6,6 +6,7 @@ export class CategoryMapper {
   static toDomain(record: PrismaCategory): Category {
     return Category.reconstitute({
       id: record.id,
+      organizationId: record.organizationId,
       name: record.name,
       description: record.description ?? undefined,
       createdAt: record.createdAt,
@@ -17,6 +18,7 @@ export class CategoryMapper {
   static toPersistence(category: Category) {
     return {
       id: category.id,
+      organizationId: category.organizationId,
       name: category.name,
       description: category.description ?? null,
       createdAt: category.createdAt,

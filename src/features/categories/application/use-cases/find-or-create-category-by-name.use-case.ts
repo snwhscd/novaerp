@@ -13,6 +13,7 @@ export class FindOrCreateCategoryByNameUseCase {
     private readonly repository: CategoryRepository,
     private readonly idGenerator: IdGenerator,
     private readonly eventDispatcher: DomainEventDispatcher,
+    private readonly organizationId: string,
   ) {}
 
   async execute(dto: FindOrCreateCategoryByNameDto): Promise<{ id: string }> {
@@ -28,6 +29,7 @@ export class FindOrCreateCategoryByNameUseCase {
 
     const category = Category.create({
       id: this.idGenerator.generateId(),
+      organizationId: this.organizationId,
       name,
       createdAt: now,
       updatedAt: now,

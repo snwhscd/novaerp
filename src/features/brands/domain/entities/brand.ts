@@ -4,6 +4,7 @@ export type BrandId = string
 
 export interface CreateBrandProps {
   id: BrandId
+  organizationId: string
 
   name: string
   description?: string
@@ -40,6 +41,10 @@ export class Brand {
 
   get id() {
     return this.props.id
+  }
+
+  get organizationId() {
+    return this.props.organizationId
   }
 
   get name() {

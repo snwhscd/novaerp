@@ -7,9 +7,14 @@ import { BrandMapper } from '@/features/brands/infrastructure/mappers/brand.mapp
 import { isPrismaKnownError, PRISMA_ERROR_CODE } from '@/shared/infrastructure/prisma/prisma-error'
 
 export class PrismaBrandRepository implements BrandRepository {
-  constructor(private readonly prisma: PrismaClient) {}
+  constructor(
+    private readonly prisma: PrismaClient,
+    private readonly organizationId: string,
+  ) {}
 
   async save(brand: Brand): Promise<void> {
+    this.assertSameOrganization(brand)
+
     try {
       await this.prisma.brand.create({ data: BrandMapper.toPersistence(brand) })
     } catch (error) {
@@ -18,10 +23,15 @@ export class PrismaBrandRepository implements BrandRepository {
   }
 
   async update(brand: Brand): Promise<void> {
+    this.assertSameOrganization(brand)
+
     const { id, ...data } = BrandMapper.toPersistence(brand)
 
     try {
-      await this.prisma.brand.update({ where: { id }, data })
+      await this.prisma.brand.update({
+        where: { id, organizationId: this.organizationId },
+        data,
+      })
     } catch (error) {
       throw this.translateError(error, brand.name)
     }
@@ -29,30 +39,42 @@ export class PrismaBrandRepository implements BrandRepository {
 
   async delete(id: BrandId): Promise<void> {
     await this.prisma.brand.update({
-      where: { id },
+      where: { id, organizationId: this.organizationId },
       data: { deletedAt: new Date() },
     })
   }
 
   async findById(id: BrandId): Promise<Brand | null> {
-    const record = await this.prisma.brand.findFirst({ where: { id, deletedAt: null } })
+    const record = await this.prisma.brand.findFirst({
+      where: { id, organizationId: this.organizationId, deletedAt: null },
+    })
 
     return record ? BrandMapper.toDomain(record) : null
   }
 
   async findByName(name: string): Promise<Brand | null> {
-    const record = await this.prisma.brand.findFirst({ where: { name, deletedAt: null } })
+    const record = await this.prisma.brand.findFirst({
+      where: { name, organizationId: this.organizationId, deletedAt: null },
+    })
 
     return record ? BrandMapper.toDomain(record) : null
   }
 
   async findAll(): Promise<Brand[]> {
     const records = await this.prisma.brand.findMany({
-      where: { deletedAt: null },
+      where: { organizationId: this.organizationId, deletedAt: null },
       orderBy: { name: 'asc' },
     })
 
     return records.map(BrandMapper.toDomain)
+  }
+
+  private assertSameOrganization(brand: Brand): void {
+    if (brand.organizationId !== this.organizationId) {
+      throw new Error(
+        `PrismaBrandRepository scoped to ${this.organizationId} received a Brand from ${brand.organizationId}`,
+      )
+    }
   }
 
   private translateError(error: unknown, brandName: string): unknown {

@@ -2,8 +2,9 @@
 
 import { revalidatePath } from 'next/cache'
 
-import { brandsContainer } from '@/features/brands/infrastructure/container'
+import { createBrandsContainer } from '@/features/brands/infrastructure/container'
 import { createBrandSchema } from '@/features/brands/presentation/schemas/create-brand.schema'
+import { getRequestContext } from '@/shared/infrastructure/auth/get-request-context'
 import { DomainError } from '@/shared/domain/errors/domain-error'
 
 export interface CreateBrandActionState {
@@ -31,6 +32,9 @@ export async function createBrandAction(
   }
 
   try {
+    const context = await getRequestContext()
+    const brandsContainer = createBrandsContainer(context)
+
     const result = await brandsContainer.createBrandUseCase.execute({
       name: parsed.data.name,
       description: parsed.data.description || undefined,

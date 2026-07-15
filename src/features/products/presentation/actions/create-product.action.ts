@@ -2,15 +2,16 @@
 
 import { revalidatePath } from 'next/cache'
 
-import { brandsContainer } from '@/features/brands/infrastructure/container'
-import { categoriesContainer } from '@/features/categories/infrastructure/container'
-import { productsContainer } from '@/features/products/infrastructure/container'
+import { createBrandsContainer } from '@/features/brands/infrastructure/container'
+import { createCategoriesContainer } from '@/features/categories/infrastructure/container'
+import { DomainError } from '@/shared/domain/errors/domain-error'
+import { createProductsContainer } from '@/features/products/infrastructure/container'
 import {
   createProductSchema,
   NEW_BRAND_OPTION_VALUE,
   NEW_CATEGORY_OPTION_VALUE,
 } from '@/features/products/presentation/schemas/create-product.schema'
-import { DomainError } from '@/shared/domain/errors/domain-error'
+import { getRequestContext } from '@/shared/infrastructure/auth/get-request-context'
 import { isPrismaKnownError, PRISMA_ERROR_CODE } from '@/shared/infrastructure/prisma/prisma-error'
 
 export interface CreateProductActionState {
@@ -55,6 +56,11 @@ export async function createProductAction(
   const input = parsed.data
 
   try {
+    const context = await getRequestContext()
+    const brandsContainer = createBrandsContainer(context)
+    const categoriesContainer = createCategoriesContainer(context)
+    const productsContainer = createProductsContainer(context)
+
     let brandId = input.brandId || undefined
 
     if (brandId === NEW_BRAND_OPTION_VALUE) {

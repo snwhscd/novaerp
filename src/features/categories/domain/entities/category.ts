@@ -8,6 +8,7 @@ export type CategoryId = string
 
 export interface CreateCategoryProps {
   id: CategoryId
+  organizationId: string
 
   name: string
   description?: string
@@ -56,6 +57,10 @@ export class Category extends AggregateRoot {
 
   get id() {
     return this.props.id
+  }
+
+  get organizationId() {
+    return this.props.organizationId
   }
 
   get name() {

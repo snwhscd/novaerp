@@ -11,6 +11,7 @@ export class FindOrCreateBrandByNameUseCase {
   constructor(
     private readonly repository: BrandRepository,
     private readonly idGenerator: IdGenerator,
+    private readonly organizationId: string,
   ) {}
 
   async execute(dto: FindOrCreateBrandByNameDto): Promise<{ id: string }> {
@@ -26,6 +27,7 @@ export class FindOrCreateBrandByNameUseCase {
 
     const brand = Brand.create({
       id: this.idGenerator.generateId(),
+      organizationId: this.organizationId,
       name,
       createdAt: now,
       updatedAt: now,

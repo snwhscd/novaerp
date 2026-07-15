@@ -3,7 +3,7 @@
 import {
   createBrandAction,
   type CreateBrandActionState,
-} from '@/features/brands/presentation/actions/create-brand-action'
+} from '@/features/brands/presentation/actions/create-brand.action'
 import { Button } from '@/shared/presentation/components/ui/button'
 import { Input } from '@/shared/presentation/components/ui/input'
 import { FieldError, Label } from '@/shared/presentation/components/ui/label'

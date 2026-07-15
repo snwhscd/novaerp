@@ -1,10 +1,14 @@
 import { FolderPlus, FolderTree } from 'lucide-react'
 
-import { categoriesContainer } from '@/features/categories/infrastructure/container'
+import { createCategoriesContainer } from '@/features/categories/infrastructure/container'
+import { getRequestContext } from '@/shared/infrastructure/auth/get-request-context'
 import { LinkButton } from '@/shared/presentation/components/ui/link-button'
 import { Topbar } from '@/shared/presentation/components/layout/topbar'
 
 export default async function CategoriesPage() {
+  const context = await getRequestContext()
+  const categoriesContainer = createCategoriesContainer(context)
+
   const categories = await categoriesContainer.listCategoriesUseCase.execute()
 
   return (

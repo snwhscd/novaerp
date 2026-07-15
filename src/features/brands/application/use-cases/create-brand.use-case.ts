@@ -8,6 +8,7 @@ export class CreateBrandUseCase {
   constructor(
     private readonly repository: BrandRepository,
     private readonly idGenerator: IdGenerator,
+    private readonly organizationId: string,
   ) {}
 
   async execute(dto: CreateBrandDto): Promise<{ id: string }> {
@@ -21,6 +22,7 @@ export class CreateBrandUseCase {
 
     const brand = Brand.create({
       id: this.idGenerator.generateId(),
+      organizationId: this.organizationId,
       name: dto.name,
       description: dto.description,
       createdAt: now,
