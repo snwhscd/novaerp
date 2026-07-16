@@ -16,6 +16,16 @@ export default async function DashboardLayout({ children }: { children: React.Re
     redirect('/sign-in')
   }
 
+  // Correo sin verificar: ni siquiera llegamos a preguntar por
+  // organización -- primero confirmamos que el correo es de verdad
+  // suyo. autoSignIn te deja con sesión activa justo después de
+  // registrarte aunque no hayas verificado todavía, así que este
+  // chequeo es necesario incluso con requireEmailVerification activo en
+  // el login.
+  if (!session.user.emailVerified) {
+    redirect('/verify-email')
+  }
+
   // Sin organización activa no hay "empresa" bajo la cual trabajar.
   // OJO: esto NO significa que el usuario no tenga ninguna empresa --
   // Better Auth deja activeOrganizationId en null en cada sesión nueva,

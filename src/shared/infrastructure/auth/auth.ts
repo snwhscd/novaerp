@@ -4,6 +4,7 @@ import { nextCookies } from 'better-auth/next-js'
 import { organization } from 'better-auth/plugins'
 
 import { prisma } from '@/shared/infrastructure/prisma/client'
+import { sendVerificationEmail } from '@/shared/infrastructure/email/send-verification-email'
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -14,6 +15,24 @@ export const auth = betterAuth({
     enabled: true,
     minPasswordLength: 8,
     autoSignIn: true,
+    // Bloquea el LOGIN (no la sesión que ya tienes activa por autoSignIn
+    // justo después de registrarte) si el correo no está verificado.
+    requireEmailVerification: true,
+  },
+
+  emailVerification: {
+    sendOnSignUp: true, // manda el correo automático al registrarse
+    autoSignInAfterVerification: true,
+    sendVerificationEmail: async ({ user, url }) => {
+      // A propósito SIN await -- evita timing attacks (que alguien
+      // infiera si un correo existe midiendo cuánto tarda la respuesta).
+      // Recomendación oficial de Better Auth.
+      void sendVerificationEmail({
+        to: user.email,
+        userName: user.name,
+        verificationUrl: url,
+      })
+    },
   },
 
   // Nota: el rol de un usuario NO se configura aquí. Vive en el modelo

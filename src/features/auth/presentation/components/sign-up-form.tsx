@@ -1,7 +1,7 @@
 'use client'
 
 import { useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -14,6 +14,7 @@ import { Input } from '@/shared/presentation/components/ui/input'
 
 export function SignUpForm() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const [serverError, setServerError] = useState<string | null>(null)
 
   const {
@@ -38,7 +39,14 @@ export function SignUpForm() {
       return
     }
 
-    router.push('/')
+    // Si un día encadenamos el link de "Regístrate" desde sign-in
+    // conservando ?redirectTo, esto ya lo respeta. Por ahora, si viniste
+    // de una invitación sin cuenta, igual te vas a topar con ella en
+    // /invitations gracias a /organizations/select -- solo que en la
+    // lista completa, no directo en esta invitación específica.
+    const redirectTo = searchParams.get('redirectTo') || '/'
+
+    router.push(redirectTo)
     router.refresh()
   }
 

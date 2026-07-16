@@ -8,6 +8,7 @@ import {
   ShoppingCart,
   Tag,
   Users,
+  type LucideIcon,
 } from 'lucide-react'
 
 import { SignOutButton } from '@/features/auth/presentation/components/sign-out-button'
@@ -16,18 +17,30 @@ import {
   type OrganizationOption,
 } from '@/features/organizations/presentation/components/organization-switcher'
 
-const navSections = [
+interface NavItem {
+  href: string
+  label: string
+  icon: LucideIcon
+  disabled?: boolean
+}
+
+interface NavSection {
+  label: string
+  items: NavItem[]
+}
+
+const navSections: NavSection[] = [
   {
     label: 'General',
-    items: [{ href: '/', label: 'Resumen', icon: LayoutGrid, disabled: false }],
+    items: [{ href: '/', label: 'Resumen', icon: LayoutGrid }],
   },
   {
     label: 'Catálogo',
     items: [
-      { href: '/products', label: 'Productos', icon: Package, disabled: false },
-      { href: '/brands', label: 'Marcas', icon: Tag, disabled: false },
-      { href: '/categories', label: 'Categorías', icon: FolderTree, disabled: false },
-      { href: '/inventory', label: 'Inventario', icon: Boxes, disabled: false },
+      { href: '/products', label: 'Productos', icon: Package },
+      { href: '/brands', label: 'Marcas', icon: Tag },
+      { href: '/categories', label: 'Categorías', icon: FolderTree },
+      { href: '/inventory', label: 'Inventario', icon: Boxes },
     ],
   },
   {
@@ -36,6 +49,10 @@ const navSections = [
       { href: '/sales', label: 'Ventas', icon: ShoppingCart, disabled: true },
       { href: '/customers', label: 'Clientes', icon: Users, disabled: true },
     ],
+  },
+  {
+    label: 'Empresa',
+    items: [{ href: '/team', label: 'Equipo', icon: Users }],
   },
 ]
 
