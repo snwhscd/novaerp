@@ -2,9 +2,10 @@ import { betterAuth } from 'better-auth'
 import { prismaAdapter } from 'better-auth/adapters/prisma'
 import { nextCookies } from 'better-auth/next-js'
 import { organization } from 'better-auth/plugins'
+import { after } from 'next/server'
 
-import { prisma } from '@/shared/infrastructure/prisma/client'
 import { sendVerificationEmail } from '@/shared/infrastructure/email/send-verification-email'
+import { prisma } from '@/shared/infrastructure/prisma/client'
 
 export const auth = betterAuth({
   database: prismaAdapter(prisma, {
@@ -24,14 +25,20 @@ export const auth = betterAuth({
     sendOnSignUp: true, // manda el correo automático al registrarse
     autoSignInAfterVerification: true,
     sendVerificationEmail: async ({ user, url }) => {
-      // A propósito SIN await -- evita timing attacks (que alguien
+      // Seguimos sin `await` aquí -- evita timing attacks (que alguien
       // infiera si un correo existe midiendo cuánto tarda la respuesta).
-      // Recomendación oficial de Better Auth.
-      void sendVerificationEmail({
-        to: user.email,
-        userName: user.name,
-        verificationUrl: url,
-      })
+      // Pero un `void` suelto no basta en serverless: Vercel puede matar
+      // la función en cuanto la respuesta HTTP sale, cortando la llamada
+      // a Resend a medias sin ningún error visible (200 OK igual, correo
+      // nunca sale). after() le dice a la plataforma "espera esto antes
+      // de congelar la función", sin bloquear la respuesta al usuario.
+      after(() =>
+        sendVerificationEmail({
+          to: user.email,
+          userName: user.name,
+          verificationUrl: url,
+        }),
+      )
     },
   },
 
